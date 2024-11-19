@@ -49,6 +49,12 @@ const client = new MongoClient(uri, {
     }
 });
 
+const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  };
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -63,12 +69,7 @@ async function run() {
             
             const token = jwt.sign(user, process.env.SECRET_TOKEN, {expiresIn: '1h'});
             
-            res.cookie('token', token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'none',
-                path: '/'
-            })
+            res.cookie('token', token, cookieOptions)
             .send({success: true});
         })
 
@@ -77,7 +78,7 @@ async function run() {
             console.log("logged out", user);
 
             res
-            .clearCookie('token', {maxAge: 0})
+            .clearCookie('token', {...cookieOptions, maxAge: 0})
             .send({success: true})
         })
 
